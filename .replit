@@ -3,6 +3,7 @@ modules = ["python-3.11"]
 
 [nix]
 channel = "stable-24_05"
+packages = ["libxcrypt", "unicorn-emu"]
 
 [unitTest]
 language = "python3"
@@ -11,5 +12,10 @@ language = "python3"
 requiredFiles = [".replit", "replit.nix"]
 
 [deployment]
-run = ["python3", "main.py"]
+run = ["python3", "src/main.py"]
 deploymentTarget = "cloudrun"
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
+exposeLocalhost = true

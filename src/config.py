@@ -1,0 +1,2 @@
+JWT_SECRET = "ColabioJwtSecret"
+JWT_ALGORITHM = "HS256"
