@@ -32,7 +32,10 @@ async def new_session(
     credentials: SignInSchema,
     db: AsyncSession
 ):
-    query = await db.execute(select(UserModel).where(UserModel.email == credentials.email))
+    query = await db.execute(
+        select(UserModel)
+        .where(UserModel.email == credentials.email)
+    )
     user = query.scalar_one_or_none()
     
     if not user:

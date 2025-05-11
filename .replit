@@ -3,7 +3,7 @@ modules = ["python-3.11"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["libxcrypt", "unicorn-emu"]
+packages = ["cargo", "libiconv", "libxcrypt", "rustc", "unicorn-emu"]
 
 [unitTest]
 language = "python3"

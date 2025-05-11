@@ -21,4 +21,7 @@ class GetMemberSchema(BaseModel):
     username: str
     email: EmailStr
     role: str
-    
+
+class RemoveMemberSchema(BaseModel):
+    project_id: int
+    email: EmailStr

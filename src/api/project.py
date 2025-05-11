@@ -1,8 +1,20 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import EmailStr 
 
-from src.services.project import create_project, about_project, my_projects, add_member, project_members
-from src.schemas.project import NewProjectSchema, NewProjectMemberSchema
+from src.services.project import (
+    create_project, 
+    about_project, 
+    my_projects, 
+    add_member, 
+    project_members, 
+    delete_member
+)
+from src.schemas.project import (
+    NewProjectSchema, 
+    NewProjectMemberSchema, 
+    RemoveMemberSchema
+)
 from src.dependencies import get_current_user
 from src.models.user import UserModel
 from src.database import get_db
@@ -48,6 +60,15 @@ async def get_project_members(
     db: AsyncSession = Depends(get_db)
 ):
     return await project_members(project_id, user, db)
+
+
+@router.delete("/members")
+async def remove_member(
+    member: RemoveMemberSchema,
+    user: UserModel = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    return await delete_member(member, user, db)
 
 
 @router.get("/{project_id}")

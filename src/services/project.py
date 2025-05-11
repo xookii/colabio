@@ -1,9 +1,14 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import select
+from sqlalchemy import select, delete
 
-from src.schemas.project import NewProjectSchema, NewProjectMemberSchema, GetMemberSchema
+from src.schemas.project import (
+    NewProjectSchema, 
+    NewProjectMemberSchema, 
+    RemoveMemberSchema,
+    GetMemberSchema
+)
 from src.models.project import ProjectModel, ProjectMemberModel
 from src.models.user import UserModel
 
@@ -159,7 +164,7 @@ async def project_members(
         )
         .join(
             ProjectMemberModel, 
-            ProjectMemberModel.user_id == user.id
+            ProjectMemberModel.user_id == UserModel.id
         )
         .where(
             ProjectMemberModel.project_id == project_id
@@ -176,3 +181,60 @@ async def project_members(
     ]
     
     return members_out
+
+async def delete_member(
+    member: RemoveMemberSchema,  
+    user: UserModel,
+    db: AsyncSession
+):
+    query = await db.execute(
+        select(ProjectMemberModel)
+        .where(
+            ProjectMemberModel.user_id == user.id,
+            ProjectMemberModel.project_id == member.project_id
+        )
+    )
+    project_member = query.scalar_one_or_none()
+
+    if not project_member:
+        raise HTTPException(
+            status_code=403,
+            detail="You are not a participant in the project"
+        )
+    
+    if project_member.role != "owner":
+        raise HTTPException(
+            status_code=403,
+            detail="Only owner can remove participants"
+        )
+
+    member_for = await get_user_by_email(member.email, db)
+    if user.id == member_for.id:
+        raise HTTPException(
+            status_code=403,
+            detail="You cannot remove yourself"
+        )
+    
+    query = await db.execute(
+        select(ProjectMemberModel)
+        .where(
+            ProjectMemberModel.user_id == member_for.id,
+            ProjectMemberModel.project_id == member.project_id
+        )
+    )
+    project_member = query.scalar_one_or_none()
+    if not project_member:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    query = await db.execute(
+        delete(ProjectMemberModel)
+        .where(
+            ProjectMemberModel.user_id == member_for.id,
+            ProjectMemberModel.project_id == member.project_id
+        )
+    )
+    await db.commit()
+    return f"User {member.email} removed from project"
